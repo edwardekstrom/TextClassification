@@ -96,7 +96,8 @@ namespace MNBClassifier
 
             // REPEAT EVERYTHING AFTER THIS 5 TIMES
             long avgTime = 0;
-            for (int i = 1; i <= 5; ++i)
+            const int NUM_ITERATONS = 1;
+            for (int i = 1; i <= NUM_ITERATONS; ++i)
             {
                 Stopwatch p = new Stopwatch();
                 p.Start();
@@ -109,10 +110,10 @@ namespace MNBClassifier
                 Console.WriteLine("******************************");
             }
 
-            finalAccuracyValue /= 5;
+            finalAccuracyValue /= NUM_ITERATONS;
             Console.WriteLine("Final Averaged Accuracy: " + finalAccuracyValue);
 
-            avgTime /= 5;
+            avgTime /= NUM_ITERATONS;
             long milliseconds = avgTime % 1000;
             avgTime = (avgTime - milliseconds) / 1000;
             long seconds = avgTime % 60;
@@ -226,27 +227,31 @@ namespace MNBClassifier
 
             // Map unique random IDs to all Documents
             Console.WriteLine("Identifying Scrubbed Documents...");
-            string[] scrubbedDocs = Directory.GetFiles(pathToScrubbed, "*.txt", SearchOption.AllDirectories);
-            SetOfRandom r = new SetOfRandom(fileCount);
-            docList = new Dictionary<int, string>();
-            foreach (string doc in scrubbedDocs)
-            {
-                docList.Add(r.nextUniqueNum(), doc);
-            }
-            numTotalDocs = docList.Count;
+            string[] scrubbedDocsTraining = Directory.GetFiles(pathToScrubbed + "\\20NG\\20news-bydate-train", "*.txt", SearchOption.AllDirectories);
+            string[] scrubbedDocsTest = Directory.GetFiles(pathToScrubbed + "\\20NG\\20news-bydate-test", "*.txt", SearchOption.AllDirectories);
+            //SetOfRandom r = new SetOfRandom(fileCount);
+            //docList = new Dictionary<int, string>();
+            //foreach (string doc in scrubbedDocs)
+            //{
+            //    docList.Add(r.nextUniqueNum(), doc);
+            //}
+            //numTotalDocs = docList.Count;
 
             // separate the documents into the dc_training and dc_test sets
             List<string> dc_training = new List<string>(); // init dc_training
             List<string> dc_test = new List<string>(); // init dc_test
-            for (int i = 0; i < eighty; ++i)
+            //for (int i = 0; i < eighty; ++i)
+            foreach(string trDoc in scrubbedDocsTraining)
             {
-                dc_training.Add(docList[i]);
+                //dc_training.Add(docList[i]);
+                dc_training.Add(trDoc);
             }
-            for (int i = eighty; i < fileCount; ++i)
+            //for (int i = eighty; i < fileCount; ++i)
+            foreach(string testDoc in scrubbedDocsTest)
             {
-                dc_test.Add(docList[i]);
+                //dc_test.Add(docList[i]);
+                dc_test.Add(testDoc);
             }
-            //Console.WriteLine(dc_training.Last() + "\r\n" + dc_test.First());
             Console.WriteLine("\tdone -> " + (dc_training.Count + dc_test.Count) + " documents found");
 
             // return the selected feature set
@@ -338,6 +343,7 @@ namespace MNBClassifier
             string prefix = "20NG\\";
             int start = doc.LastIndexOf(prefix) + prefix.Length;
             string docClass = doc.Substring(start, doc.LastIndexOf('\\') - start);
+            docClass = docClass.Substring(docClass.IndexOf('\\') + 1);
 
             return docClass;
         }
