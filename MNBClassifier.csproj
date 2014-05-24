@@ -45,6 +45,7 @@
     <Compile Include="MNBevaluation.cs" />
     <Compile Include="MNBprobability.cs" />
     <Compile Include="Multinomial.cs" />
+    <Compile Include="MVBernoulli.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SetOfRandom.cs" />
