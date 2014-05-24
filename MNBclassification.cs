@@ -225,33 +225,46 @@ namespace MNBClassifier
             training_set = new Dictionary<string, MultinomialEntry>();
             test_set = new Dictionary<string, MultinomialEntry>();
 
-            // Map unique random IDs to all Documents
+            // Map unique random IDs to all Documents - always yeilds about 76 percent accuracy
             Console.WriteLine("Identifying Scrubbed Documents...");
+
+            // CS 470 document sorting code
             string[] scrubbedDocsTraining = Directory.GetFiles(pathToScrubbed + "\\20NG\\20news-bydate-train", "*.txt", SearchOption.AllDirectories);
             string[] scrubbedDocsTest = Directory.GetFiles(pathToScrubbed + "\\20NG\\20news-bydate-test", "*.txt", SearchOption.AllDirectories);
+            // separate the documents into the dc_training and dc_test sets
+            List<string> dc_training = new List<string>(); // init dc_training
+            List<string> dc_test = new List<string>(); // init dc_test
+            foreach(string trDoc in scrubbedDocsTraining)
+            {
+                dc_training.Add(trDoc);
+            }
+            foreach(string testDoc in scrubbedDocsTest)
+            {
+                dc_test.Add(testDoc);
+            }
+
+            // ORIGINAL document sorting code
             //SetOfRandom r = new SetOfRandom(fileCount);
+            //string[] scrubbedDocs = Directory.GetFiles(pathToScrubbed, "*.txt", SearchOption.AllDirectories);
             //docList = new Dictionary<int, string>();
             //foreach (string doc in scrubbedDocs)
             //{
             //    docList.Add(r.nextUniqueNum(), doc);
             //}
             //numTotalDocs = docList.Count;
-
-            // separate the documents into the dc_training and dc_test sets
-            List<string> dc_training = new List<string>(); // init dc_training
-            List<string> dc_test = new List<string>(); // init dc_test
+            //// separate the documents into the dc_training and dc_test sets
+            //List<string> dc_training = new List<string>(); // init dc_training
+            //List<string> dc_test = new List<string>(); // init dc_test
             //for (int i = 0; i < eighty; ++i)
-            foreach(string trDoc in scrubbedDocsTraining)
-            {
-                //dc_training.Add(docList[i]);
-                dc_training.Add(trDoc);
-            }
+            //{
+            //    dc_training.Add(docList[i]);
+            //}
             //for (int i = eighty; i < fileCount; ++i)
-            foreach(string testDoc in scrubbedDocsTest)
-            {
-                //dc_test.Add(docList[i]);
-                dc_test.Add(testDoc);
-            }
+            //{
+            //    dc_test.Add(docList[i]);
+            //}
+
+
             Console.WriteLine("\tdone -> " + (dc_training.Count + dc_test.Count) + " documents found");
 
             // return the selected feature set
