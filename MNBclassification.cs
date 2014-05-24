@@ -45,7 +45,6 @@ namespace MNBClassifier
             s.Start();
 
             // TODO: Change this to a usable directory when giving away
-            //basePath = @"C:\Users\" + Environment.GetEnvironmentVariable("USERNAME") + @"\Documents\Visual Studio 2013\Projects\MNBClassifier2";
             basePath = ".";
             pathToCollection = basePath + @"\20NG";
             pathToScrubbed = basePath + @"\scrubbed";
