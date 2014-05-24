@@ -251,7 +251,7 @@ namespace MNBClassifier
             //{
             //    docList.Add(r.nextUniqueNum(), doc);
             //}
-            //numTotalDocs = docList.Count;
+            //
             //// separate the documents into the dc_training and dc_test sets
             //List<string> dc_training = new List<string>(); // init dc_training
             //List<string> dc_test = new List<string>(); // init dc_test
@@ -264,8 +264,8 @@ namespace MNBClassifier
             //    dc_test.Add(docList[i]);
             //}
 
-
-            Console.WriteLine("\tdone -> " + (dc_training.Count + dc_test.Count) + " documents found");
+            numTotalDocs = dc_training.Count + dc_test.Count;
+            Console.WriteLine("\tdone -> " + (numTotalDocs) + " documents found");
 
             // return the selected feature set
             Dictionary<string, int> selectedFeatures = featureSelection(dc_training, M);
