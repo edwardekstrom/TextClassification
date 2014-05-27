@@ -41,7 +41,7 @@ namespace MNBClassifier
             }
             else
             {
-                return new Dictionary<string,Dictionary<string,double>>();
+                return new Dictionary<string, Dictionary<string, double>>();
             }
 
             return wordProbabilities;
