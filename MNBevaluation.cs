@@ -9,14 +9,16 @@ namespace MNBClassifier
     class MNBevaluation
     {
         private double accuracy;
+        private string type;
 
-        public MNBevaluation()
+        public MNBevaluation(string type)
         {
             accuracy = 0.0;
+            this.type = type;
         }
 
         public double accuracyMeasure(
-            Dictionary<string, MultinomialEntry> test_set,
+            Dictionary<string, BayesEntry> test_set,
             Dictionary<string, string> docLabels)
         {
             int totalLabels = test_set.Count;
