@@ -13,8 +13,8 @@ namespace MNBClassifier
     class MNBclassification
     {
         private Dictionary<int, string> docList;
-        private Dictionary<string, MultinomialEntry> training_set;
-        private Dictionary<string, MultinomialEntry> test_set;
+        private Dictionary<string, BayesEntry> training_set;
+        private Dictionary<string, BayesEntry> test_set;
         private Dictionary<string, int> trainingVocab;
         private Dictionary<string, Dictionary<string, int>> docVocabCounts;
         private Dictionary<string, int> classCounts;
@@ -45,11 +45,14 @@ namespace MNBClassifier
             s.Start();
 
             // TODO: Change this to a usable directory when giving away
-            //basePath = @"C:\Users\" + Environment.GetEnvironmentVariable("USERNAME") + @"\Documents\Visual Studio 2013\Projects\MNBClassifier2";
             basePath = ".";
             pathToCollection = basePath + @"\20NG";
             pathToScrubbed = basePath + @"\scrubbed";
             pathToUnscrubbed = basePath + @"\toScrub";
+
+            // initialize training and test sets
+            training_set = new Dictionary<string, BayesEntry>();
+            test_set = new Dictionary<string, BayesEntry>();
 
             // initialize statistical variables
             trainingVocab = new Dictionary<string, int>();
@@ -94,25 +97,44 @@ namespace MNBClassifier
                 s.Start();
             }
 
-            // REPEAT EVERYTHING AFTER THIS 5 TIMES
             long avgTime = 0;
-            for (int i = 1; i <= 5; ++i)
+            //List<string> types = new List<string>() { "Multinomial", "Bernoulli", "Smoothed" };
+            List<string> types = new List<string>() { /*"Bernoulli",*/ "Multinomial"};
+            int NUM_ITERATONS = types.Count;
+            foreach (string type in types)
             {
                 Stopwatch p = new Stopwatch();
                 p.Start();
-                Console.WriteLine("Beginning iteration " + i);
-                fiveFoldTestIteration(M);
+                Console.WriteLine("Beginning iteration " + type);
+                fiveFoldTestIteration(M, type);
                 p.Stop();
                 avgTime += p.ElapsedMilliseconds;
-                Console.WriteLine("Iteration " + i + " done");
+                Console.WriteLine("Iteration " + type + " done");
                 Console.WriteLine("Iteration Processing Time: " + p.Elapsed);
                 Console.WriteLine("******************************");
             }
 
-            finalAccuracyValue /= 5;
+            // ORIGINAL iteration code
+            // NUM_ITERATIONS controls how many times the test is run
+            //long avgTime = 0;
+            //const int NUM_ITERATONS = 1;
+            //for (int i = 1; i <= NUM_ITERATONS; ++i)
+            //{
+            //    Stopwatch p = new Stopwatch();
+            //    p.Start();
+            //    Console.WriteLine("Beginning iteration " + i);
+            //    fiveFoldTestIteration(M);
+            //    p.Stop();
+            //    avgTime += p.ElapsedMilliseconds;
+            //    Console.WriteLine("Iteration " + i + " done");
+            //    Console.WriteLine("Iteration Processing Time: " + p.Elapsed);
+            //    Console.WriteLine("******************************");
+            //}
+
+            finalAccuracyValue /= NUM_ITERATONS;
             Console.WriteLine("Final Averaged Accuracy: " + finalAccuracyValue);
 
-            avgTime /= 5;
+            avgTime /= NUM_ITERATONS;
             long milliseconds = avgTime % 1000;
             avgTime = (avgTime - milliseconds) / 1000;
             long seconds = avgTime % 60;
@@ -174,33 +196,58 @@ namespace MNBClassifier
             return featureList; // return the set of vocab of size M with the greatest Information Gain
         }
 
-        public string label(MultinomialEntry testSetDoc)
+        // this function calculates which class a document should be in
+        public string label(BayesEntry testSetDoc, string type)
         {
-            double argmax = double.NegativeInfinity;
             string topC = "";
-            foreach(string c in classCounts.Keys)
-            {
-                double arg = double.NegativeInfinity;
-                double arg1 = Math.Log10(probs.getClassProbability(c));
-                double arg2 = 0.0;
-                foreach (string word in testSetDoc.VocabOccur.Keys)
-                {
-                    double wp = probs.getWordProbability(word, c);
-                    if (wp == 0.0)
-                        throw new Exception("wp should never be zero");
-                    else
-                        arg2 += Math.Log10(Math.Pow(wp, testSetDoc.VocabOccur[word]));
-                }
 
-                arg = arg1 + arg2;
-                if(arg > argmax)
-                {
-                    argmax = arg;
-                    topC = c;
-                }
+            if (type.Equals("Multinomial"))
+            {
+                topC = Multinomial.label(testSetDoc, classCounts, probs);
+            }
+            else if (type.Equals("Bernoulli"))
+            {
+                topC = MVBernoulli.label(testSetDoc, classCounts, probs, trainingVocab);
+                //foreach (string c in classCounts.Keys)
+                //{
+                //    double arg = double.NegativeInfinity;
+                //    double arg1 = Math.Log10(probs.getClassProbability(c));
+                //    double arg2 = 0.0;
+                //    foreach (string word in trainingVocab.Keys)
+                //    {
+                //        double wp = 0.0;
+                //        if(testSetDoc.VocabOccur.ContainsKey(word))
+                //        {
+                //            wp = probs.getWordProbability(word, c);
+                //        }
+                //        else
+                //        {
+                //            wp = 1.0 - probs.getWordProbability(word, c);
+                //        }
+
+                //        if (wp == 0.0)
+                //            throw new Exception("wp should never be zero");
+                //        else
+                //            arg2 += Math.Log10(wp);
+                //    }
+
+                //    arg = arg1 + arg2;
+                //    if (arg > argmax)
+                //    {
+                //        argmax = arg;
+                //        topC = c;
+                //    }
+                //}
+            }
+            else if (type.Equals("Smoothed"))
+            {
+                throw new Exception("Smoothed labeling not implemented yet");
+            }
+            else
+            {
+                throw new Exception("Invalid Model Type used in 'label' function");
             }
 
-            //Console.WriteLine("topC:\t" + topC);
             return topC;
         }
 
@@ -213,90 +260,113 @@ namespace MNBClassifier
             get { return finalAccuracyValue; }
         }
 
-        private void fiveFoldTestIteration(int M)
+        private void fiveFoldTestIteration(int M, string type)
         {
             // initialize probability and evaluation variables
-            probs = new MNBprobability();
-            eval = new MNBevaluation();
+            probs = new MNBprobability(type);
+            eval = new MNBevaluation(type);
 
             // reinitialize some other variables
             docVocabCounts = new Dictionary<string, Dictionary<string, int>>();
-            training_set = new Dictionary<string, MultinomialEntry>();
-            test_set = new Dictionary<string, MultinomialEntry>();
+            //training_set = new Dictionary<string, MultinomialEntry>();
+            //test_set = new Dictionary<string, MultinomialEntry>();
 
             // Map unique random IDs to all Documents
             Console.WriteLine("Identifying Scrubbed Documents...");
-            string[] scrubbedDocs = Directory.GetFiles(pathToScrubbed, "*.txt", SearchOption.AllDirectories);
-            SetOfRandom r = new SetOfRandom(fileCount);
-            docList = new Dictionary<int, string>();
-            foreach (string doc in scrubbedDocs)
-            {
-                docList.Add(r.nextUniqueNum(), doc);
-            }
-            numTotalDocs = docList.Count;
 
+            // CS 470 document sorting code - always yeilds about 76 percent accuracy
+            string[] scrubbedDocsTraining = Directory.GetFiles(pathToScrubbed + "\\20NG\\20news-bydate-train", "*.txt", SearchOption.AllDirectories);
+            string[] scrubbedDocsTest = Directory.GetFiles(pathToScrubbed + "\\20NG\\20news-bydate-test", "*.txt", SearchOption.AllDirectories);
             // separate the documents into the dc_training and dc_test sets
             List<string> dc_training = new List<string>(); // init dc_training
             List<string> dc_test = new List<string>(); // init dc_test
-            for (int i = 0; i < eighty; ++i)
+            foreach(string trDoc in scrubbedDocsTraining)
             {
-                dc_training.Add(docList[i]);
+                dc_training.Add(trDoc);
             }
-            for (int i = eighty; i < fileCount; ++i)
+            foreach(string testDoc in scrubbedDocsTest)
             {
-                dc_test.Add(docList[i]);
+                dc_test.Add(testDoc);
             }
-            //Console.WriteLine(dc_training.Last() + "\r\n" + dc_test.First());
-            Console.WriteLine("\tdone -> " + (dc_training.Count + dc_test.Count) + " documents found");
+
+            // ORIGINAL document sorting code - DO NOT DELETE
+            //SetOfRandom r = new SetOfRandom(fileCount);
+            //string[] scrubbedDocs = Directory.GetFiles(pathToScrubbed, "*.txt", SearchOption.AllDirectories);
+            //docList = new Dictionary<int, string>();
+            //foreach (string doc in scrubbedDocs)
+            //{
+            //    docList.Add(r.nextUniqueNum(), doc);
+            //}
+            //
+            //// separate the documents into the dc_training and dc_test sets
+            //List<string> dc_training = new List<string>(); // init dc_training
+            //List<string> dc_test = new List<string>(); // init dc_test
+            //for (int i = 0; i < eighty; ++i)
+            //{
+            //    dc_training.Add(docList[i]);
+            //}
+            //for (int i = eighty; i < fileCount; ++i)
+            //{
+            //    dc_test.Add(docList[i]);
+            //}
+
+            numTotalDocs = dc_training.Count + dc_test.Count;
+            Console.WriteLine("\tdone -> " + (numTotalDocs) + " documents found");
 
             // return the selected feature set
             Dictionary<string, int> selectedFeatures = featureSelection(dc_training, M);
 
             // create the training_set structure
-            Console.WriteLine("Creating training_set structure...");
-            foreach (string doc in dc_training)
+            if (training_set.Count == 0)
             {
-                Dictionary<string, int> subsetVCounts = new Dictionary<string, int>();
-                foreach (string feature in selectedFeatures.Keys)
+                Console.WriteLine("Creating training_set structure...");
+                foreach (string doc in dc_training)
                 {
-                    if (docVocabCounts[doc].ContainsKey(feature))
+                    Dictionary<string, int> subsetVCounts = new Dictionary<string, int>();
+                    foreach (string feature in selectedFeatures.Keys)
                     {
-                        subsetVCounts.Add(feature, docVocabCounts[doc][feature]);
+                        if (docVocabCounts[doc].ContainsKey(feature))
+                        {
+                            subsetVCounts.Add(feature, docVocabCounts[doc][feature]);
+                        }
                     }
-                }
 
-                training_set.Add(doc, new MultinomialEntry(subsetVCounts, docToClass(doc)));
+                    training_set.Add(doc, new BayesEntry(subsetVCounts, docToClass(doc)));
+                }
+                Console.WriteLine("\tdone");
             }
-            Console.WriteLine("\tdone");
 
             // create the test_set structure
-            Console.WriteLine("Creating test_set structure...");
-            foreach (string doc in dc_test)
+            if (test_set.Count == 0)
             {
-                Dictionary<string, int> thisDocVocab = new Dictionary<string, int>();
-                string[] testLines = File.ReadAllLines(doc);
-                foreach (string line in testLines)
+                Console.WriteLine("Creating test_set structure...");
+                foreach (string doc in dc_test)
                 {
-                    string[] wc = line.Split(' ');
-                    if (selectedFeatures.ContainsKey(wc[0]))
+                    Dictionary<string, int> thisDocVocab = new Dictionary<string, int>();
+                    string[] testLines = File.ReadAllLines(doc);
+                    foreach (string line in testLines)
                     {
-                        if (!thisDocVocab.ContainsKey(wc[0]))
+                        string[] wc = line.Split(' ');
+                        if (selectedFeatures.ContainsKey(wc[0]))
                         {
-                            thisDocVocab.Add(wc[0], int.Parse(wc[1]));
-                        }
-                        else
-                        {
-                            thisDocVocab[wc[0]] += int.Parse(wc[1]);
+                            if (!thisDocVocab.ContainsKey(wc[0]))
+                            {
+                                thisDocVocab.Add(wc[0], int.Parse(wc[1]));
+                            }
+                            else
+                            {
+                                thisDocVocab[wc[0]] += int.Parse(wc[1]);
+                            }
                         }
                     }
+                    test_set.Add(doc, new BayesEntry(thisDocVocab, docToClass(doc)));
                 }
-                test_set.Add(doc, new MultinomialEntry(thisDocVocab, docToClass(doc)));
+                Console.WriteLine("\tdone"); 
             }
-            Console.WriteLine("\tdone");
 
             // compute word probabilities
             Console.WriteLine("Computing wordProbabilites...");
-            probs.computeWordProbability(training_set, trainingVocab);
+            probs.computeWordProbability(training_set, trainingVocab, numDocsWithWinC, classCounts, type);
             Console.WriteLine("\tdone");
 
             // compute class probabilites
@@ -309,7 +379,7 @@ namespace MNBClassifier
             Dictionary<string, string> testDocLabels = new Dictionary<string, string>();
             foreach (string testDoc in test_set.Keys)
             {
-                testDocLabels.Add(testDoc, label(test_set[testDoc]));
+                testDocLabels.Add(testDoc, label(test_set[testDoc], type));
             }
             Console.WriteLine("\tdone");
 
@@ -338,6 +408,7 @@ namespace MNBClassifier
             string prefix = "20NG\\";
             int start = doc.LastIndexOf(prefix) + prefix.Length;
             string docClass = doc.Substring(start, doc.LastIndexOf('\\') - start);
+            docClass = docClass.Substring(docClass.IndexOf('\\') + 1);
 
             return docClass;
         }
