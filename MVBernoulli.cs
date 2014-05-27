@@ -58,5 +58,50 @@ namespace MNBClassifier
 
             return wordProbabilities;
         }
+
+
+
+        public static string label(
+            BayesEntry testSetDoc,
+            Dictionary<string, int> classCounts,
+            MNBprobability probs,
+            Dictionary<string, int> trainingVocab)
+        {
+            double argmax = double.NegativeInfinity;
+            string topC = "";
+
+            foreach (string c in classCounts.Keys)
+            {
+                double arg = double.NegativeInfinity;
+                double arg1 = Math.Log10(probs.getClassProbability(c));
+                double arg2 = 0.0;
+                foreach (string word in trainingVocab.Keys)
+                {
+                    double wp = 0.0;
+                    if (testSetDoc.VocabOccur.ContainsKey(word))
+                    {
+                        wp = probs.getWordProbability(word, c);
+                    }
+                    else
+                    {
+                        wp = 1.0 - probs.getWordProbability(word, c);
+                    }
+
+                    if (wp == 0.0)
+                        throw new Exception("wp should never be zero");
+                    else
+                        arg2 += Math.Log10(wp);
+                }
+
+                arg = arg1 + arg2;
+                if (arg > argmax)
+                {
+                    argmax = arg;
+                    topC = c;
+                }
+            }
+
+            return topC;
+        }
     }
 }

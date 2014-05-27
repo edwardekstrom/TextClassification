@@ -99,7 +99,7 @@ namespace MNBClassifier
 
             long avgTime = 0;
             //List<string> types = new List<string>() { "Multinomial", "Bernoulli", "Smoothed" };
-            List<string> types = new List<string>() { "Bernoulli", "Multinomial"};
+            List<string> types = new List<string>() { /*"Bernoulli",*/ "Multinomial"};
             int NUM_ITERATONS = types.Count;
             foreach (string type in types)
             {
@@ -199,65 +199,45 @@ namespace MNBClassifier
         // this function calculates which class a document should be in
         public string label(BayesEntry testSetDoc, string type)
         {
-            double argmax = double.NegativeInfinity;
             string topC = "";
 
             if (type.Equals("Multinomial"))
             {
-                foreach (string c in classCounts.Keys)
-                {
-                    double arg = double.NegativeInfinity;
-                    double arg1 = Math.Log10(probs.getClassProbability(c));
-                    double arg2 = 0.0;
-                    foreach (string word in testSetDoc.VocabOccur.Keys)
-                    {
-                        double wp = probs.getWordProbability(word, c);
-                        if (wp == 0.0)
-                            throw new Exception("wp should never be zero");
-                        else
-                            arg2 += Math.Log10(Math.Pow(wp, testSetDoc.VocabOccur[word]));
-                    }
-
-                    arg = arg1 + arg2;
-                    if (arg > argmax)
-                    {
-                        argmax = arg;
-                        topC = c;
-                    }
-                }
+                topC = Multinomial.label(testSetDoc, classCounts, probs);
             }
             else if (type.Equals("Bernoulli"))
             {
-                foreach (string c in classCounts.Keys)
-                {
-                    double arg = double.NegativeInfinity;
-                    double arg1 = Math.Log10(probs.getClassProbability(c));
-                    double arg2 = 0.0;
-                    foreach (string word in trainingVocab.Keys)
-                    {
-                        double wp = 0.0;
-                        if(testSetDoc.VocabOccur.ContainsKey(word))
-                        {
-                            wp = probs.getWordProbability(word, c);
-                        }
-                        else
-                        {
-                            wp = 1.0 - probs.getWordProbability(word, c);
-                        }
+                topC = MVBernoulli.label(testSetDoc, classCounts, probs, trainingVocab);
+                //foreach (string c in classCounts.Keys)
+                //{
+                //    double arg = double.NegativeInfinity;
+                //    double arg1 = Math.Log10(probs.getClassProbability(c));
+                //    double arg2 = 0.0;
+                //    foreach (string word in trainingVocab.Keys)
+                //    {
+                //        double wp = 0.0;
+                //        if(testSetDoc.VocabOccur.ContainsKey(word))
+                //        {
+                //            wp = probs.getWordProbability(word, c);
+                //        }
+                //        else
+                //        {
+                //            wp = 1.0 - probs.getWordProbability(word, c);
+                //        }
 
-                        if (wp == 0.0)
-                            throw new Exception("wp should never be zero");
-                        else
-                            arg2 += Math.Log10(wp);
-                    }
+                //        if (wp == 0.0)
+                //            throw new Exception("wp should never be zero");
+                //        else
+                //            arg2 += Math.Log10(wp);
+                //    }
 
-                    arg = arg1 + arg2;
-                    if (arg > argmax)
-                    {
-                        argmax = arg;
-                        topC = c;
-                    }
-                }
+                //    arg = arg1 + arg2;
+                //    if (arg > argmax)
+                //    {
+                //        argmax = arg;
+                //        topC = c;
+                //    }
+                //}
             }
             else if (type.Equals("Smoothed"))
             {
