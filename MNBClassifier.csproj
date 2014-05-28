@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BayesEntry.cs" />
+    <Compile Include="ConfusionMatrix.cs" />
     <Compile Include="MNBclassification.cs" />
     <Compile Include="MNBevaluation.cs" />
     <Compile Include="MNBprobability.cs" />
@@ -51,6 +52,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SetOfRandom.cs" />
     <Compile Include="Smoothed.cs" />
+    <Compile Include="Smoothing.cs" />
     <Compile Include="Stopwords.cs" />
   </ItemGroup>
   <ItemGroup>
