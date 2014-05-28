@@ -208,40 +208,10 @@ namespace MNBClassifier
             else if (type.Equals("Bernoulli"))
             {
                 topC = MVBernoulli.label(testSetDoc, classCounts, probs, trainingVocab);
-                //foreach (string c in classCounts.Keys)
-                //{
-                //    double arg = double.NegativeInfinity;
-                //    double arg1 = Math.Log10(probs.getClassProbability(c));
-                //    double arg2 = 0.0;
-                //    foreach (string word in trainingVocab.Keys)
-                //    {
-                //        double wp = 0.0;
-                //        if(testSetDoc.VocabOccur.ContainsKey(word))
-                //        {
-                //            wp = probs.getWordProbability(word, c);
-                //        }
-                //        else
-                //        {
-                //            wp = 1.0 - probs.getWordProbability(word, c);
-                //        }
-
-                //        if (wp == 0.0)
-                //            throw new Exception("wp should never be zero");
-                //        else
-                //            arg2 += Math.Log10(wp);
-                //    }
-
-                //    arg = arg1 + arg2;
-                //    if (arg > argmax)
-                //    {
-                //        argmax = arg;
-                //        topC = c;
-                //    }
-                //}
             }
             else if (type.Equals("Smoothed"))
             {
-                throw new Exception("Smoothed labeling not implemented yet");
+                topC = Smoothed.label(testSetDoc, classCounts, probs, trainingVocab);
             }
             else
             {
