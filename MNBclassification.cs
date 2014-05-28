@@ -98,8 +98,8 @@ namespace MNBClassifier
             }
 
             long avgTime = 0;
-            //List<string> types = new List<string>() { "Multinomial", "Bernoulli", "Smoothed" };
-            List<string> types = new List<string>() { /*"Bernoulli",*/ "Multinomial"};
+            //List<string> types = new List<string>() { "Multinomial", "Bernoulli", "Smoothing" };
+            List<string> types = new List<string>() {"Multinomial"};
             int NUM_ITERATONS = types.Count;
             foreach (string type in types)
             {
@@ -239,9 +239,9 @@ namespace MNBClassifier
                 //    }
                 //}
             }
-            else if (type.Equals("Smoothed"))
+            else if (type.Equals("Smoothing"))
             {
-                throw new Exception("Smoothed labeling not implemented yet");
+                topC = Smoothing.label(testSetDoc, classCounts, probs);
             }
             else
             {
@@ -377,15 +377,20 @@ namespace MNBClassifier
             // label the test documents
             Console.WriteLine("Labeling Test Documents...");
             Dictionary<string, string> testDocLabels = new Dictionary<string, string>();
+            HashSet<string> allLabels = new HashSet<string>();
             foreach (string testDoc in test_set.Keys)
             {
-                testDocLabels.Add(testDoc, label(test_set[testDoc], type));
+                string l = label(test_set[testDoc], type);
+                testDocLabels.Add(testDoc, l);
+                allLabels.Add(l);
             }
             Console.WriteLine("\tdone");
 
             // get the accuracy measure
             Console.WriteLine("Getting accuracy measure...");
             double accuracyValue = eval.accuracyMeasure(test_set, testDocLabels);
+            ConfusionMatrix cm = eval.getConfusion(test_set, testDocLabels,allLabels);
+            cm.print();
             finalAccuracyValue += accuracyValue;
             Console.WriteLine("\tdone");
 

@@ -35,5 +35,20 @@ namespace MNBClassifier
 
             return accuracy;
         }
+
+        public ConfusionMatrix getConfusion(
+            Dictionary<string, BayesEntry> test_set,
+            Dictionary<string, string> docLabels,
+            HashSet<string> allLabels)
+        {
+            List<string> labels = new List<string>(allLabels);
+            ConfusionMatrix cm = new ConfusionMatrix(labels);
+            foreach (string doc in test_set.Keys)
+            {
+                cm.addEntry(test_set[doc].Label, docLabels[doc]);
+            }
+            return cm;
+
+        }
     }
 }
