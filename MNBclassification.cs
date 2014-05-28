@@ -99,7 +99,7 @@ namespace MNBClassifier
 
             long avgTime = 0;
             //List<string> types = new List<string>() { "Multinomial", "Bernoulli", "Smoothed" };
-            List<string> types = new List<string>() { /*"Bernoulli",*/ "Multinomial"};
+            List<string> types = new List<string>() { "Bernoulli", "Multinomial"};
             int NUM_ITERATONS = types.Count;
             foreach (string type in types)
             {
